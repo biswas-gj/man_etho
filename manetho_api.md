@@ -157,7 +157,7 @@ Authorization: Bearer <accessToken>
 
 ---
 
-### 3.2  Retrieve Intent `GET /payments/{paymentId}`
+### 3.2  Retrieve Intent `GET /payments`
 
 ```http
 GET /payments/pi_3Kk123
