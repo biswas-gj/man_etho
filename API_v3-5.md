@@ -66,16 +66,32 @@ Optional headers:
 ### 🆕 Sign-Up
 
 **`POST /auth/signup`**
-Registers a new user.
+
+All protected routes require the header:
+
+```
+Authorization: Bearer <accessToken>
+```
+
+### 2.1  Sign‑Up `POST /auth/signup`
+
+| Field      | Type   | Required |
+|------------|--------|----------|
+| fullName   | string | ✔ |
+| email      | email  | ✔ |
+| password   | string | ✔ |
 
 #### ✅ Success — `201 Created`
 
 **Request:**
 
-```json
+```http
+POST /auth/signup HTTP/1.1
+Content-Type: application/json
+
 {
   "fullName": "Ada Lovelace",
-  "email": "ada@example.com",
+  "email":    "ada@example.com",
   "password": "Str0ngP@ssw0rd!"
 }
 ```
@@ -212,6 +228,11 @@ Registers a new user.
 
 **`POST /auth/login`**
 Authenticates an existing user.
+
+| Field   | Type | Required |
+|---------|------|----------|
+| email   | email | ✔ |
+| password| string | ✔ |
 
 #### ✅ Success — `200 OK`
 
@@ -990,62 +1011,173 @@ Aggregated financial data across plans. No personal billing info is returned.
 
 ---
 
-## Normal Chat (DM)
+## 🧵 Community Threads
 
+| Verb | Path                     | Notes               |
+| ---- | ------------------------ | ------------------- |
+| POST | `/threads`               | Create thread       |
+| POST | `/threads/{id}/comment`  | Post comment        |
+| GET  | `/threads/{id}/comments` | Get thread comments |
 
-> **Privacy bypass** – the client never sees raw `chatId`.
-> • To **send** a message you either provide a `threadToken` (issued when the chat opens)
->   or just the `recipientId` (server resolves/creates the room).
+Public discussion threads visible to all authenticated users. Users can create threads, post comments, and fetch discussions.
 
-### WebSocket 
-`GET /chat/ws`
+---
 
-Upgrades with `Sec‑WebSocket‑Protocol: bearer,<JWT>`.
+### `POST /threads`
 
-### Send Message 
-`POST /chat/send`
+Create a new public thread.
 
-<details><summary>Details</summary>
+#### ✅ `201 Created`
+
+**Request:**
 
 ```json
 {
-  "recipientId": "8f14e45f-ea48-4bb1-bc02-4fea8c737df1",
+  "title": "Need FFT help",
+  "body": "Why does zero-padding matter?"
+}
+```
+
+**Response:**
+
+```json
+{
+  "threadId": "th_2451",
+  "createdAt": "2025-05-13T09:00:00Z"
+}
+```
+
+---
+
+### `POST /threads/{id}/comment`
+
+Post a comment to a thread.
+
+#### ✅ `201 Created`
+
+**Request:**
+
+```json
+{
+  "content": "It improves interpolation."
+}
+```
+
+**Response:**
+
+```json
+{
+  "commentId": "cmt_9381",
+  "timestamp": "2025-05-13T09:05:00Z"
+}
+```
+
+---
+
+### `GET /threads/{id}/comments?limit=50&cursor=1683631306`
+
+Get paginated comments from a thread.
+
+#### ✅ `200 OK`
+
+**Response:**
+
+```json
+{
+  "comments": [
+    {
+      "commentId": "cmt_9381",
+      "senderId": "usr_312",
+      "content": "It improves interpolation.",
+      "timestamp": "2025-05-13T09:05:00Z"
+    }
+  ],
+  "nextCursor": "1683631400"
+}
+```
+
+---
+
+## 💬 Normal Chat (DM)
+
+| Verb | Path                       | Notes               |
+| ---- | -------------------------- | ------------------- |
+| POST | `/users/{id}/chat/send`    | Send direct message |
+| GET  | `/users/{id}/chat/history` | View DM history     |
+| GET  | `/chat/ws`                 | WebSocket upgrade   |
+
+Private 1‑to‑1 messaging between users. All messages require authentication, and message access is scoped to participants only.
+
+> 🛡️ The client never sees raw `chatId`. The backend issues a `threadToken` upon first contact between users.
+
+---
+
+### `POST /users/{id}/chat/send`
+
+Send a direct message to a user.
+
+#### ✅ `201 Created`
+
+**Request:**
+
+```json
+{
   "content": "Finished the lab?"
 }
 ```
 
-**201 Created**
+**Response:**
 
 ```json
 {
-  "messageId":  "c3aa4cd9-7c49-44ef-a1bf-3a989abdb66f",
+  "messageId": "msg_1039",
   "threadToken": "th_f94c8e...",
-  "timestamp":  "2025-05-09T15:22:11Z"
+  "timestamp": "2025-05-13T10:10:00Z"
 }
 ```
 
-</details>
+> The server creates or resolves the `threadToken` based on `recipientId`.
 
-### History 
-`GET /chat/history?threadToken=th_f94c8e...&limit=50&cursor=1683631306`
+---
 
-<details><summary>Response Body</summary>
+### `GET /users/{id}/chat/history?limit=50&cursor=1683631306`
+
+Fetch the message history of a DM conversation.
+
+#### ✅ `200 OK`
+
+**Response:**
 
 ```json
 {
   "messages": [
     {
-      "messageId": "c3aa4cd9-...",
-      "senderId":  "8f14e45f-...",
-      "content":   "Finished the lab?",
-      "timestamp": "2025-05-09T15:22:11Z"
+      "messageId": "msg_1039",
+      "senderId": "usr_102",
+      "content": "Finished the lab?",
+      "timestamp": "2025-05-13T10:10:00Z"
     }
   ],
-  "nextCursor": "1683631244"
+  "nextCursor": "1683631400"
 }
 ```
 
-</details>
+---
+
+### `GET /chat/ws`
+
+Initiate a real-time WebSocket connection for chat.
+
+**Headers:**
+
+```
+Sec-WebSocket-Protocol: bearer,<JWT>
+```
+
+**Usage:**
+
+* Join the connection after authentication
+* Events: `message`, `ack`, `error`
 
 ---
 
@@ -1123,19 +1255,56 @@ Upgrades with `Sec‑WebSocket‑Protocol: bearer,<JWT>`.
 
 *Generate* `POST /mindmaps`
 
+`POST /mindmaps/generate`
+
 ```json
-{ "notes": "Newton's laws describe the relationship..." }
+{
+  "notes": "Newton's laws describe the relationship..."
+}
 ```
 
-→ **201** `{ "mindMapId":"...", "mindMapUrl":"https://cdn..." }`
+```json
+{
+  "mindMapId": "egv43jhdw712he38yde7br64b63b6e7",
+  "mindMapUrl": "https://cdn.manetho.io/maps/abc123.svg",
+  "nodes": [ ... ],
+  "edges": [ ... ]
+}
+```
+
 
 *Get* `GET /mindmaps?mindMapId=<id>`
+
+**Request**
+
+```json
+{
+  "mindMapId": "egv43jhdw712he38yde7br64b63b6e7",
+}
+```
+
+**Response**
+
+```json
+{
+  "mindMapId": "egv43jhdw712he38yde7br64b63b6e7",
+  "mindMapUrl": "https://cdn.manetho.io/maps/abc123.svg",
+  "nodes": [ ... ],
+  "edges": [ ... ]
+}
+```
 
 </details>
 
 ---
 
 ## Practice Tests
+
+| Verb | Path | Purpose |
+|------|------|---------|
+| **POST** | `/practice-tests` | Create mock exam |
+| **GET**  | `/practice-tests/{id}` | Details (questions) |
+| **POST** | `/practice-tests/{id}/submit` | Submit answers |
 
 <details><summary>Endpoints</summary>
 
@@ -1169,30 +1338,56 @@ Upgrades with `Sec‑WebSocket‑Protocol: bearer,<JWT>`.
 
 ## Payments
 
-<details><summary>Endpoints</summary>
+| Field  | Type | Required | Notes |
+|--------|------|----------|-------|
+| amount | int  | ✔ | Smallest currency unit (e.g. **50 00** = $50) |
+| currency | string | ✔ | ISO 4217 (USD, BDT) |
+| method | enum | ✔ | `card`, `bkash`, `nagad` |
 
+
+```http
+POST /payments/intents
+Authorization: Bearer <accessToken>
+
+{
+  "amount": 5000,
+  "currency": "BDT",
+  "method": "card"
+}
+```
+
+```json
+// 201 Created
+{
+  "paymentId": "pi_3Kk123",
+  "clientSecret": "pi_3Kk123_secret_4H9x...",
+  "status": "requires_confirmation"
+}
+```
+
+```http
+GET /payments/pi_3Kk123
+Authorization: Bearer <accessToken>
+```
+
+```json
+// 200 OK
+{
+  "paymentId": "pi_3Kk123",
+  "amount": 5000,
+  "currency": "USD",
+  "status": "succeeded",
+  "method": "card"
+}
+```
+<details><summary>Endpoints</summary>
+  
 | Verb   | Path                               | Body                           |
 | ------ | ---------------------------------- | ------------------------------ |
 | POST   | `/payments/intents`                | `{ amount, currency, method }` |
 | GET    | `/payments/intents?paymentId=<id>` | —                              |
 | DELETE | `/payments/intents`                | `{ "paymentId": "<id>" }`      |
 | POST   | `/payments/webhook`                | (gateway payload)              |
-
-*Create Intent Example*
-
-```json
-{ "amount":5000, "currency":"USD", "method":"card" }
-```
-
-→ **201**
-
-```json
-{
-  "paymentId":    "pi_3Kk123",
-  "clientSecret": "pi_3Kk123_secret_4H9x...",
-  "status":       "requires_confirmation"
-}
-```
 
 </details>
 
@@ -1217,40 +1412,19 @@ Upgrades with `Sec‑WebSocket‑Protocol: bearer,<JWT>`.
 
 ---
 
-## Community Threads
+## Cost‑Efficiency
 
-<details><summary>Endpoints</summary>
+| Layer / Service | Primary (Managed) | Cost (USD) | Fallback / Self‑Host | Rationale |
+|-----------------|-------------------|------------|----------------------|-----------|
+| **Generative AI** | OpenAI GPT‑3.5‑Turbo | 0.002 / 1k tokens | Llama 2 7B on GPU spot instances | Route large batch jobs to Llama; burst queries to GPT for quality |
+| **Embeddings & Vector DB** | OpenAI Embeddings | 0.0004 / 1k tokens | Qdrant on t4g.small (ARM) | Store cold vectors on Qdrant to cut 55 % cost |
+| **Object Storage** | DigitalOcean Spaces (S3‑compatible) | 5 / 250 GB‑mo | MinIO on Hetzner | Swap to MinIO if egress > 180 GB/mo |
+| **Auth & Users** | Auth0 Free Tier (7 k MAU) | Free | Keycloak (Docker) | Zero‑cost until scale; seamless JWT compatibility |
+| **Real‑Time Chat** | Socket.IO self‑host | ~10 $/mo infra | — | Single‑node; horizontal scale behind ALB |
+| **Analytics/BI** | Metabase OSS on PostgreSQL | infra‑only | — | Postgres replica; no SaaS fees |
 
-*Create Thread* `POST /threads`
+*Hybrid routing + autoscaling keeps **third‑party spend < 30 %** of total infra.*
 
-```json
-{ "title": "Need FFT help", "body": "Why does zero‑padding matter?" }
-```
-
-→ **201** `{ "threadId":"..." }`
-
-*Post Message* `POST /threads/post`
-
-```json
-{ "threadId":"...", "content":"It improves interpolation." }
-```
-
-*Get Messages* `GET /threads/messages?threadId=<id>&limit=50&cursor=<ts>`
-
-</details>
-
----
-
-## Cost‑Efficiency Playbook
-
-| Layer          | First‑choice (cheap/managed) | Fallback / self‑host | Trigger                |
-| -------------- | ---------------------------- | -------------------- | ---------------------- |
-| LLM inference  | GPT‑3.5‑Turbo                | Llama 2 7B (spot)    | Token spend > \$200/mo |
-| Vector DB      | Qdrant Cloud                 | Qdrant on t4g.small  | QPS > 200/s            |
-| Object Storage | DO Spaces                    | MinIO + Hetzner      | Egress > 180 GB/mo     |
-| Auth           | Auth0 Free                   | Keycloak             | MAU > 7 k              |
-
-Routing cold traffic to fallback saves **30‑50 %** cloud spend.
 
 ---
 
