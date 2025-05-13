@@ -1438,3 +1438,32 @@ Authorization: Bearer <accessToken>
   "requestId": "9a8d..."
 }
 ```
+
+```json
+{
+  "status": 400,
+  "error":  "ValidationError",
+  "message": "password must be ≥ 8 characters"
+}
+```
+
+| Code | Meaning |
+|------|---------|
+| 400 Bad Request | Payload malformed / validation failure |
+| 401 Unauthorized | Missing / invalid access token |
+| 403 Forbidden | Insufficient privileges |
+| 404 Not Found | Resource id does not exist |
+| 409 Conflict | Duplicate resource (e.g., email) |
+| 500 Internal | Unhandled server error |
+
+---
+
+### Rate Limits & Quotas
+
+| Plan      | Requests / min | Chat tokens / month |
+|-----------|----------------|---------------------|
+| Free      | 100            | 50 k |
+| Pro       | 600            | 1 M |
+| Institution | 1000         | 10 M |
+
+429 Too Many Requests → `Retry-After` header (seconds).
