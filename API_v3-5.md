@@ -814,7 +814,7 @@ Retrieve full conversation history for a given chat session.
 
 ---
 
-### 3. `GET /ai-chat/message/{messageId}`
+### 3. `GET /ai-chat/message/`
 
 Fetch details of a specific message.
 
@@ -832,7 +832,7 @@ Fetch details of a specific message.
 
 ---
 
-### 4. `DELETE /ai-chat/message/{messageId}`
+### 4. `DELETE /ai-chat/message/`
 
 Delete a specific message from a chat.
 
@@ -1049,7 +1049,7 @@ Create a new public thread.
 
 ---
 
-### `POST /threads/{id}/comment`
+### `POST /threads/{tid}/comment`
 
 Post a comment to a thread.
 
@@ -1074,7 +1074,7 @@ Post a comment to a thread.
 
 ---
 
-### `GET /threads/{id}/comments?limit=50&cursor=1683631306`
+### `GET /threads/{tid}/comments?limit=50&cursor=1683631306`
 
 Get paginated comments from a thread.
 
@@ -1112,7 +1112,7 @@ Private 1‑to‑1 messaging between users. All messages require authentication,
 
 ---
 
-### `POST /users/{id}/chat/send`
+### `POST /users/chat/send`
 
 Send a direct message to a user.
 
@@ -1140,7 +1140,7 @@ Send a direct message to a user.
 
 ---
 
-### `GET /users/{id}/chat/history?limit=50&cursor=1683631306`
+### `GET /users/chat/history?limit=50&cursor=1683631306`
 
 Fetch the message history of a DM conversation.
 
