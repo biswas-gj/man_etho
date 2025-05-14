@@ -843,7 +843,7 @@ Delete a specific message from a chat.
 
 ---
 
-### 5. `DELETE /ai-chat/chat/{chatId}`
+### 5. `DELETE /ai-chat/chat/`
 
 Delete a full chat and all associated messages.
 
@@ -944,7 +944,7 @@ Retrieve content reported by users or flagged by AI.
 
 ---
 
-### `DELETE /admin/threads/{threadId}`
+### `DELETE /admin/threads/`
 
 Delete a reported public thread.
 
@@ -1049,7 +1049,7 @@ Create a new public thread.
 
 ---
 
-### `POST /threads/{tid}/comment`
+### `POST /threads/comment`
 
 Post a comment to a thread.
 
@@ -1074,7 +1074,7 @@ Post a comment to a thread.
 
 ---
 
-### `GET /threads/{tid}/comments?limit=50&cursor=1683631306`
+### `GET /threads/comments?limit=50&cursor=1683631306`
 
 Get paginated comments from a thread.
 
@@ -1303,8 +1303,8 @@ Sec-WebSocket-Protocol: bearer,<JWT>
 | Verb | Path | Purpose |
 |------|------|---------|
 | **POST** | `/practice-tests` | Create mock exam |
-| **GET**  | `/practice-tests/{id}` | Details (questions) |
-| **POST** | `/practice-tests/{id}/submit` | Submit answers |
+| **GET**  | `/practice-tests/test` | Details (questions) |
+| **POST** | `/practice-tests/test/submit` | Submit answers |
 
 <details><summary>Endpoints</summary>
 
@@ -1321,7 +1321,7 @@ Sec-WebSocket-Protocol: bearer,<JWT>
 
 → **201** `{ "testId":"...", "startUrl":"https://app..." }`
 
-*Submit* `POST /practice-tests/submit`
+*Submit* `POST /practice-tests/test/submit`
 
 ```json
 {
@@ -1345,16 +1345,19 @@ Sec-WebSocket-Protocol: bearer,<JWT>
 | method | enum | ✔ | `card`, `bkash`, `nagad` |
 
 
-```http
-POST /payments/intents
-Authorization: Bearer <accessToken>
+`POST /payments/intents`
 
+**Request Body**
+
+```json
 {
   "amount": 5000,
   "currency": "BDT",
   "method": "card"
 }
 ```
+
+**Response Body**
 
 ```json
 // 201 Created
